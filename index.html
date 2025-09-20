@@ -1,111 +1,182 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>李子的导航页</title>
-  <style>
-	:root {
-	  --bg-color: #000;
-	  --btn-bg: rgba(255, 255, 255, 0.1);
-	  --btn-text: #fff;
-	}
-
-	body.light-mode {
-	  --bg-color: #f5f5f5;
-	  --btn-bg: rgba(0, 0, 0, 0.1);
-	  --btn-text: #000;
-	}
-
-	* {
-	  box-sizing: border-box;
-	  margin: 0;
-	  padding: 0;
-	}
-
-	body {
-	  background-color: var(--bg-color);
-	  font-family: sans-serif;
-	  display: flex;
-	  justify-content: center;
-	  align-items: center;
-	  height: 100vh;
-	  flex-direction: column;
-	  gap: 20px;
-	  transition: background-color 0.3s ease;
-	  position: relative;
-	}
-
-	.glass-button {
-	  position: relative;
-	  width: 80%;
-	  max-width: 300px;
-	  padding: 20px;
-	  border-radius: 15px;
-	  background: var(--btn-bg);
-	  backdrop-filter: blur(10px);
-	  color: var(--btn-text);
-	  text-align: center;
-	  text-decoration: none;
-	  font-size: 1.2rem;
-	  transition: transform 0.3s ease, box-shadow 0.3s ease;
-	  border: 1px solid rgba(255, 255, 255, 0.3);
-	  outline: none;
-	  -webkit-tap-highlight-color: transparent;
-	}
-
-	.glass-button:hover {
-	  transform: scale(1.05);
-	  box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
-	}
-
-	.glass-button:active {
-	  transform: scale(0.95);
-	}
-
-	@media (max-width: 600px) {
-	  .glass-button {
-		font-size: 1rem;
-		padding: 15px;
-	  }
-	}
-
-	.toggle-mode {
-	  position: absolute;
-	  top: 20px;
-	  right: 20px;
-	  background: var(--btn-bg);
-	  color: var(--btn-text);
-	  border: none;
-	  padding: 10px 15px;
-	  border-radius: 10px;
-	  cursor: pointer;
-	  backdrop-filter: blur(8px);
-	  font-size: 0.9rem;
-	  transition: background 0.3s ease, color 0.3s ease;
-	  outline: none;
-	  -webkit-tap-highlight-color: transparent;
-	}
-
-	.toggle-mode:hover {
-	  transform: scale(1.05);
-	}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kizuki 导航站</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4F46E5',
+                        secondary: '#7C3AED',
+                        accent: '#EC4899',
+                        dark: '#111827',
+                        light: '#F9FAFB'
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'system-ui', 'sans-serif'],
+                        display: ['Montserrat', 'system-ui', 'sans-serif']
+                    },
+                    backgroundImage: {
+                        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+                        'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))'
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .text-shadow-lg {
+                text-shadow: 0 4px 8px rgba(0,0,0,0.25);
+            }
+            .backdrop-blur-xl {
+                backdrop-filter: blur(24px);
+            }
+            .animate-float {
+                animation: float 6s ease-in-out infinite;
+            }
+            .animate-pulse-slow {
+                animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+            }
+            @keyframes float {
+                0%, 100% {
+                    transform: translateY(0);
+                }
+                50% {
+                    transform: translateY(-10px);
+                }
+            }
+        }
+    </style>
 </head>
-<body>
-  <button class="toggle-mode" onclick="toggleTheme()">暗色模式</button>
+<body class="font-inter bg-gradient-to-br from-light to-gray-100 min-h-screen text-dark">
+    <!-- 主容器 -->
+    <div class="container mx-auto px-4 py-12 md:py-24">
+        <!-- 头部 -->
+        <header class="text-center mb-16 animate-float">
+            <div class="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <i class="fa fa-compass text-white text-4xl md:text-5xl"></i>
+            </div>
+            <h1 class="text-[clamp(2rem,5vw,3.5rem)] font-display font-bold mb-4 text-shadow-lg bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
+                Kizuki 导航
+            </h1>
+            <p class="text-gray-600 max-w-lg mx-auto text-lg md:text-xl opacity-90">
+                快速访问我的博客和资源站，探索更多精彩内容
+            </p>
+        </header>
 
-  <a href="https://lzd.kizuki.wiki/" class="glass-button">李子</a>
-  <a href="https://example.com/page2" class="glass-button">还没有</a>
-<a href="https://lzd.kizuki.wiki/archives/gta5xiufu" class="glass-button">存档修复那个游戏5</a>
+        <!-- 导航卡片区域 -->
+        <main class="max-w-2xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+                <!-- 博客链接卡片 -->
+                <a href="https://lzd.kizuki.wiki" target="_blank" rel="noopener noreferrer" class="group">
+                    <div class="h-full bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100">
+                        <div class="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors duration-300">
+                            <i class="fa fa-book text-2xl text-primary"></i>
+                        </div>
+                        <h2 class="text-xl font-bold mb-3 group-hover:text-primary transition-colors duration-300">博客站点</h2>
+                        <p class="text-gray-600 mb-4">浏览我的最新文章、技术分享和个人思考</p>
+                        <div class="flex items-center text-primary font-medium">
+                            <span>访问博客</span>
+                            <i class="fa fa-arrow-right ml-2 transform group-hover:translate-x-1 transition-transform duration-300"></i>
+                        </div>
+                    </div>
+                </a>
 
-	
->>>>>>> e3eccf185c8b2f5f8c17775e699cb20bc5321c4c
+                <!-- 资源站链接卡片 -->
+                <a href="https://ndrive.kizuki.wiki/s/wGie" target="_blank" rel="noopener noreferrer" class="group">
+                    <div class="h-full bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100">
+                        <div class="w-14 h-14 bg-secondary/10 rounded-xl flex items-center justify-center mb-6 group-hover:bg-secondary/20 transition-colors duration-300">
+                            <i class="fa fa-database text-2xl text-secondary"></i>
+                        </div>
+                        <h2 class="text-xl font-bold mb-3 group-hover:text-secondary transition-colors duration-300">资源站点</h2>
+                        <p class="text-gray-600 mb-4">获取各种优质资源、工具和学习资料</p>
+                        <div class="flex items-center text-secondary font-medium">
+                            <span>访问资源站</span>
+                            <i class="fa fa-arrow-right ml-2 transform group-hover:translate-x-1 transition-transform duration-300"></i>
+                        </div>
+                    </div>
+                </a>
+            </div>
 
-  <script>
-	function toggleTheme() {
-	  document.body.classList.toggle('light-mode');
-	}
-  </script>
+            <!-- 搜索框 -->
+            <div class="max-w-md mx-auto mb-16">
+                <div class="relative">
+                    <input 
+                        type="text" 
+                        placeholder="搜索内容..." 
+                        class="w-full px-6 py-4 pr-12 rounded-full bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-300 shadow-md"
+                    >
+                    <button class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors duration-300">
+                        <i class="fa fa-search text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 附加功能区域 -->
+            <div class="text-center">
+                <h3 class="text-lg font-bold mb-6">快速工具</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <button class="flex flex-col items-center justify-center p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                        <i class="fa fa-calendar text-xl text-primary mb-2"></i>
+                        <span class="text-sm">日历</span>
+                    </button>
+                    <button class="flex flex-col items-center justify-center p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                        <i class="fa fa-clock-o text-xl text-primary mb-2"></i>
+                        <span class="text-sm">时钟</span>
+                    </button>
+                    <button class="flex flex-col items-center justify-center p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                        <i class="fa fa-calculator text-xl text-primary mb-2"></i>
+                        <span class="text-sm">计算器</span>
+                    </button>
+                    <button class="flex flex-col items-center justify-center p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                        <i class="fa fa-random text-xl text-primary mb-2"></i>
+                        <span class="text-sm">随机</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- 页脚 -->
+        <footer class="text-center mt-24 text-gray-500 text-sm">
+            <p>&copy; 2024 Kizuki 导航站</p>
+            <div class="mt-4 flex justify-center gap-4">
+                <a href="#" class="hover:text-primary transition-colors duration-300">
+                    <i class="fa fa-github text-lg"></i>
+                </a>
+                <a href="#" class="hover:text-primary transition-colors duration-300">
+                    <i class="fa fa-twitter text-lg"></i>
+                </a>
+                <a href="#" class="hover:text-primary transition-colors duration-300">
+                    <i class="fa fa-envelope text-lg"></i>
+                </a>
+            </div>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // 添加页面加载动画
+        document.addEventListener('DOMContentLoaded', () => {
+            // 为卡片添加淡入动画
+            const cards = document.querySelectorAll('.group');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                }, 100 * index);
+            });
+        });
+    </script>
 </body>
 </html>
