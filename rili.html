@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>日历 | 简洁实用的日历工具</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  
+  <!-- Tailwind 配置 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3b82f6',
+            secondary: '#f97316',
+            accent: '#8b5cf6',
+            neutral: '#f3f4f6',
+            dark: '#1e293b'
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- 自定义工具类 -->
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .calendar-grid {
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+      }
+      .date-hover {
+        @apply hover:bg-primary/10 hover:scale-105 transition-all duration-200;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen font-sans">
+  <!-- 页面容器 -->
+  <div class="container mx-auto px-4 py-8 max-w-4xl">
+    
+    <!-- 头部标题 -->
+    <header class="text-center mb-8 animate-fadeIn">
+      <h1 class="text-[clamp(2rem,5vw,3rem)] font-bold text-dark mb-2 tracking-tight">日历</h1>
+      <p class="text-gray-600 text-lg">简单、实用的日历工具</p>
+    </header>
+    
+    <!-- 日历主体 -->
+    <main class="bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl">
+      
+      <!-- 日历头部控制区 -->
+      <div class="bg-primary text-white p-4 sm:p-6 flex flex-wrap items-center justify-between">
+        <div class="flex items-center space-x-2 sm:space-x-4">
+          <button id="prevMonth" class="p-2 sm:p-3 rounded-full hover:bg-white/20 transition-colors duration-200">
+            <i class="fa fa-chevron-left text-lg"></i>
+          </button>
+          <h2 id="currentMonth" class="text-xl sm:text-2xl font-semibold transition-all duration-300"></h2>
+          <button id="nextMonth" class="p-2 sm:p-3 rounded-full hover:bg-white/20 transition-colors duration-200">
+            <i class="fa fa-chevron-right text-lg"></i>
+          </button>
+        </div>
+        <div class="flex items-center space-x-2 mt-3 sm:mt-0">
+          <button id="todayBtn" class="px-4 py-2 bg-white text-primary rounded-full text-sm font-medium hover:bg-white/90 transition-colors duration-200 shadow-sm">
+            今天
+          </button>
+        </div>
+      </div>
+      
+      <!-- 星期标题行 -->
+      <div class="calendar-grid grid gap-1 sm:gap-2 p-4 text-center">
+        <div class="text-gray-500 font-medium py-2 sm:py-3">日</div>
+        <div class="text-gray-500 font-medium py-2 sm:py-3">一</div>
+        <div class="text-gray-500 font-medium py-2 sm:py-3">二</div>
+        <div class="text-gray-500 font-medium py-2 sm:py-3">三</div>
+        <div class="text-gray-500 font-medium py-2 sm:py-3">四</div>
+        <div class="text-gray-500 font-medium py-2 sm:py-3">五</div>
+        <div class="text-gray-500 font-medium py-2 sm:py-3">六</div>
+      </div>
+      
+      <!-- 日期网格 -->
+      <div id="calendarDays" class="calendar-grid grid gap-1 sm:gap-2 p-4">
+        <!-- JavaScript 将动态生成日期 -->
+      </div>
+    </main>
+    
+    <!-- 功能区 -->
+    <div class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <!-- 当前日期信息卡片 -->
+      <div id="todayInfo" class="bg-white rounded-xl shadow-md p-4 transition-all duration-300 hover:shadow-lg">
+        <h3 class="text-lg font-semibold text-gray-800 mb-2">今天</h3>
+        <p id="currentDateDisplay" class="text-2xl font-bold text-primary"></p>
+        <p id="weekdayDisplay" class="text-gray-600 mt-1"></p>
+      </div>
+      
+      <!-- 节气信息卡片 -->
+      <div id="solarTerms" class="bg-white rounded-xl shadow-md p-4 transition-all duration-300 hover:shadow-lg">
+        <h3 class="text-lg font-semibold text-gray-800 mb-2">节气</h3>
+        <p id="currentSolarTerm" class="text-xl font-medium text-accent"></p>
+        <p id="nextSolarTerm" class="text-sm text-gray-500 mt-1"></p>
+      </div>
+      
+      <!-- 月份统计卡片 -->
+      <div id="monthStats" class="bg-white rounded-xl shadow-md p-4 transition-all duration-300 hover:shadow-lg">
+        <h3 class="text-lg font-semibold text-gray-800 mb-2">本月</h3>
+        <p id="daysInMonth" class="text-xl font-medium text-secondary"></p>
+        <p id="remainingDays" class="text-sm text-gray-500 mt-1"></p>
+      </div>
+    </div>
+    
+    <!-- 页脚 -->
+    <footer class="mt-12 text-center text-gray-500 text-sm">
+      <p>© 2025 日历工具 狗夜风看了都知道</p>
+    </footer>
+  </div>
+  
+  <!-- JavaScript -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // 获取DOM元素
+      const calendarDays = document.getElementById('calendarDays');
+      const currentMonthEl = document.getElementById('currentMonth');
+      const prevMonthBtn = document.getElementById('prevMonth');
+      const nextMonthBtn = document.getElementById('nextMonth');
+      const todayBtn = document.getElementById('todayBtn');
+      const currentDateDisplay = document.getElementById('currentDateDisplay');
+      const weekdayDisplay = document.getElementById('weekdayDisplay');
+      const currentSolarTerm = document.getElementById('currentSolarTerm');
+      const nextSolarTerm = document.getElementById('nextSolarTerm');
+      const daysInMonth = document.getElementById('daysInMonth');
+      const remainingDays = document.getElementById('remainingDays');
+      
+      // 当前日期和显示的日期
+      const today = new Date();
+      let currentDate = new Date(today.getFullYear(), today.getMonth(), 1);
+      
+      // 初始化显示
+      updateCalendar();
+      updateTodayInfo();
+      updateSolarTerms();
+      updateMonthStats();
+      
+      // 事件监听器
+      prevMonthBtn.addEventListener('click', goToPrevMonth);
+      nextMonthBtn.addEventListener('click', goToNextMonth);
+      todayBtn.addEventListener('click', goToToday);
+      
+      // 更新日历函数
+      function updateCalendar() {
+        // 清空日历
+        calendarDays.innerHTML = '';
+        
+        // 更新当前月份标题
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        currentMonthEl.textContent = `${year}年${month + 1}月`;
+        
+        // 获取月份第一天是星期几
+        const firstDay = new Date(year, month, 1).getDay();
+        
+        // 获取月份的天数
+        const daysInCurrentMonth = new Date(year, month + 1, 0).getDate();
+        
+        // 添加上个月的占位天数
+        for (let i = 0; i < firstDay; i++) {
+          const emptyDay = document.createElement('div');
+          emptyDay.classList.add('h-12', 'sm:h-16', 'p-1');
+          calendarDays.appendChild(emptyDay);
+        }
+        
+        // 添加当月的日期
+        for (let day = 1; day <= daysInCurrentMonth; day++) {
+          const dateEl = document.createElement('div');
+          dateEl.classList.add('h-12', 'sm:h-16', 'p-1');
+          
+          const dateInner = document.createElement('div');
+          dateInner.classList.add('w-full', 'h-full', 'rounded-lg', 'flex', 'items-center', 'justify-center', 'transition-all', 'duration-200', 'text-sm', 'sm:text-base');
+          dateInner.textContent = day;
+          
+          // 检查是否是今天
+          const isToday = day === today.getDate() && 
+                         month === today.getMonth() && 
+                         year === today.getFullYear();
+          
+          if (isToday) {
+            dateInner.classList.add('bg-primary', 'text-white', 'font-bold');
+          } else {
+            dateInner.classList.add('date-hover', 'cursor-pointer');
+          }
+          
+          dateEl.appendChild(dateInner);
+          calendarDays.appendChild(dateEl);
+        }
+        
+        // 为每个日期添加动画效果
+        const dateElements = document.querySelectorAll('#calendarDays > div');
+        dateElements.forEach((el, index) => {
+          el.style.opacity = '0';
+          el.style.transform = 'translateY(10px)';
+          setTimeout(() => {
+            el.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+            el.style.opacity = '1';
+            el.style.transform = 'translateY(0)';
+          }, 20 * index);
+        });
+      }
+      
+      // 上一个月
+      function goToPrevMonth() {
+        currentDate.setMonth(currentDate.getMonth() - 1);
+        updateCalendar();
+        updateMonthStats();
+        updateSolarTerms();
+      }
+      
+      // 下一个月
+      function goToNextMonth() {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        updateCalendar();
+        updateMonthStats();
+        updateSolarTerms();
+      }
+      
+      // 返回今天
+      function goToToday() {
+        currentDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        updateCalendar();
+        updateTodayInfo();
+        updateMonthStats();
+        updateSolarTerms();
+      }
+      
+      // 更新今天信息
+      function updateTodayInfo() {
+        const year = today.getFullYear();
+        const month = today.getMonth() + 1;
+        const day = today.getDate();
+        const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+        const weekday = weekdays[today.getDay()];
+        
+        currentDateDisplay.textContent = `${year}年${month}月${day}日`;
+        weekdayDisplay.textContent = weekday;
+      }
+      
+      // 更新月份统计
+      function updateMonthStats() {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const totalDays = new Date(year, month + 1, 0).getDate();
+        
+        daysInMonth.textContent = `${totalDays} 天`;
+        
+        // 计算本月剩余天数
+        if (year === today.getFullYear() && month === today.getMonth()) {
+          const remaining = totalDays - today.getDate();
+          remainingDays.textContent = `还剩 ${remaining} 天`;
+        } else {
+          remainingDays.textContent = '';
+        }
+      }
+      
+      // 简化的节气信息
+      function updateSolarTerms() {
+        // 简化的节气数据
+        const solarTerms = {
+          1: { current: '小寒', next: '大寒', date: '1月5日左右' },
+          2: { current: '立春', next: '雨水', date: '2月4日左右' },
+          3: { current: '惊蛰', next: '春分', date: '3月5日左右' },
+          4: { current: '清明', next: '谷雨', date: '4月4日左右' },
+          5: { current: '立夏', next: '小满', date: '5月5日左右' },
+          6: { current: '芒种', next: '夏至', date: '6月5日左右' },
+          7: { current: '小暑', next: '大暑', date: '7月7日左右' },
+          8: { current: '立秋', next: '处暑', date: '8月7日左右' },
+          9: { current: '白露', next: '秋分', date: '9月7日左右' },
+          10: { current: '寒露', next: '霜降', date: '10月8日左右' },
+          11: { current: '立冬', next: '小雪', date: '11月7日左右' },
+          12: { current: '大雪', next: '冬至', date: '12月7日左右' }
+        };
+        
+        const month = currentDate.getMonth() + 1;
+        const term = solarTerms[month];
+        
+        currentSolarTerm.textContent = term.current;
+        nextSolarTerm.textContent = `下一个节气: ${term.next} (${term.date})`;
+      }
+      
+      // 添加键盘快捷键
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowLeft') {
+          goToPrevMonth();
+        } else if (e.key === 'ArrowRight') {
+          goToNextMonth();
+        } else if (e.key === 't' || e.key === 'T') {
+          goToToday();
+        }
+      });
+    });
+  </script>
+</body>
+</html>

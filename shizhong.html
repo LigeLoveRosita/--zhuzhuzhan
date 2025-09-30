@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>时钟 | 多功能时间工具</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  
+  <!-- Tailwind 配置 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3b82f6',
+            secondary: '#f97316',
+            accent: '#8b5cf6',
+            neutral: '#f3f4f6',
+            dark: '#1e293b'
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif']
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- 自定义工具类 -->
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .clock-shadow {
+        box-shadow: 0 0 30px rgba(59, 130, 246, 0.2);
+      }
+      .digital-time {
+        text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+      }
+      .card-hover {
+        @apply hover:shadow-lg hover:-translate-y-1 transition-all duration-300;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-screen font-sans">
+  <!-- 页面容器 -->
+  <div class="container mx-auto px-4 py-8 max-w-6xl">
+    
+    <!-- 头部标题 -->
+    <header class="text-center mb-10">
+      <h1 class="text-[clamp(2rem,5vw,3rem)] font-bold text-dark mb-2 tracking-tight">
+        <i class="fa fa-clock-o text-primary mr-2"></i>时钟
+      </h1>
+      <p class="text-gray-600 text-lg">多功能时间工具，让时间触手可及</p>
+    </header>
+    
+    <!-- 主内容区 -->
+    <main class="space-y-8">
+      <!-- 模拟时钟和数字时钟 -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- 模拟时钟 -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 card-hover flex flex-col items-center justify-center">
+          <h2 class="text-xl font-semibold text-dark mb-6">模拟时钟</h2>
+          <div class="relative aspect-square max-w-md w-full">
+            <!-- Canvas 时钟 -->
+            <canvas id="analogClock" class="w-full h-full clock-shadow rounded-full"></canvas>
+            <!-- 数字显示叠加在时钟底部 -->
+            <div id="analogTimeDisplay" class="absolute bottom-[-60px] left-1/2 transform -translate-x-1/2 text-center">
+              <span class="text-lg font-medium text-gray-700"></span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 数字时钟 -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 card-hover flex flex-col items-center justify-center">
+          <h2 class="text-xl font-semibold text-dark mb-6">数字时钟</h2>
+          <div class="text-center">
+            <div id="digitalClock" class="text-[clamp(2.5rem,8vw,5rem)] font-bold digital-time text-primary mb-4"></div>
+            <div id="dateDisplay" class="text-lg text-gray-600 mb-2"></div>
+            <div id="weekdayDisplay" class="text-md text-gray-500"></div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 功能卡片区 -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- 世界时钟 -->
+        <div class="bg-white rounded-xl shadow-lg p-5 card-hover">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-dark"><i class="fa fa-globe text-primary mr-2"></i>世界时钟</h3>
+            <button id="addTimeZone" class="text-primary hover:text-primary/80 transition-colors">
+              <i class="fa fa-plus-circle"></i>
+            </button>
+          </div>
+          <div id="worldClocks" class="space-y-3">
+            <div class="world-clock-item p-2 rounded-lg hover:bg-gray-50 transition-colors">
+              <div class="text-sm text-gray-500">北京</div>
+              <div class="text-xl font-medium text-dark" data-timezone="Asia/Shanghai"></div>
+            </div>
+            <div class="world-clock-item p-2 rounded-lg hover:bg-gray-50 transition-colors">
+              <div class="text-sm text-gray-500">纽约</div>
+              <div class="text-xl font-medium text-dark" data-timezone="America/New_York"></div>
+            </div>
+            <div class="world-clock-item p-2 rounded-lg hover:bg-gray-50 transition-colors">
+              <div class="text-sm text-gray-500">伦敦</div>
+              <div class="text-xl font-medium text-dark" data-timezone="Europe/London"></div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 计时器 -->
+        <div class="bg-white rounded-xl shadow-lg p-5 card-hover">
+          <h3 class="text-lg font-semibold text-dark mb-4"><i class="fa fa-stopwatch text-secondary mr-2"></i>计时器</h3>
+          <div id="timerDisplay" class="text-3xl font-bold text-secondary mb-4">00:00.00</div>
+          <div class="flex space-x-2 justify-center">
+            <button id="startTimer" class="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors">
+              开始
+            </button>
+            <button id="pauseTimer" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
+              暂停
+            </button>
+            <button id="resetTimer" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
+              重置
+            </button>
+          </div>
+        </div>
+        
+        <!-- 倒计时 -->
+        <div class="bg-white rounded-xl shadow-lg p-5 card-hover">
+          <h3 class="text-lg font-semibold text-dark mb-4"><i class="fa fa-hourglass-half text-accent mr-2"></i>倒计时</h3>
+          <div id="countdownDisplay" class="text-3xl font-bold text-accent mb-4">00:00:00</div>
+          <div class="space-y-3">
+            <div class="flex space-x-2">
+              <input type="number" id="hoursInput" placeholder="小时" min="0" max="99" class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-center">
+              <input type="number" id="minutesInput" placeholder="分钟" min="0" max="59" class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-center">
+              <input type="number" id="secondsInput" placeholder="秒" min="0" max="59" class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-center">
+            </div>
+            <button id="startCountdown" class="w-full px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent/90 transition-colors">
+              开始倒计时
+            </button>
+          </div>
+        </div>
+        
+        <!-- 闹钟 -->
+        <div class="bg-white rounded-xl shadow-lg p-5 card-hover">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-dark"><i class="fa fa-bell text-primary mr-2"></i>闹钟</h3>
+            <button id="addAlarm" class="text-primary hover:text-primary/80 transition-colors">
+              <i class="fa fa-plus-circle"></i>
+            </button>
+          </div>
+          <div id="alarmsList" class="space-y-3">
+            <div class="alarm-item flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition-colors">
+              <div class="flex items-center">
+                <input type="checkbox" class="mr-3" checked>
+                <span class="text-gray-700">07:00</span>
+              </div>
+              <button class="text-gray-400 hover:text-red-500 transition-colors">
+                <i class="fa fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    
+    <!-- 页脚 -->
+    <footer class="mt-12 text-center text-gray-500 text-sm">
+      <p>© 2023 时钟工具 | 精准计时，便捷生活</p>
+    </footer>
+  </div>
+  
+  <!-- JavaScript -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // 获取DOM元素
+      const analogClock = document.getElementById('analogClock');
+      const ctx = analogClock.getContext('2d');
+      const digitalClock = document.getElementById('digitalClock');
+      const dateDisplay = document.getElementById('dateDisplay');
+      const weekdayDisplay = document.getElementById('weekdayDisplay');
+      const analogTimeDisplay = document.getElementById('analogTimeDisplay').querySelector('span');
+      const worldClockItems = document.querySelectorAll('[data-timezone]');
+      
+      // 计时器相关
+      const timerDisplay = document.getElementById('timerDisplay');
+      const startTimerBtn = document.getElementById('startTimer');
+      const pauseTimerBtn = document.getElementById('pauseTimer');
+      const resetTimerBtn = document.getElementById('resetTimer');
+      
+      // 倒计时相关
+      const countdownDisplay = document.getElementById('countdownDisplay');
+      const startCountdownBtn = document.getElementById('startCountdown');
+      const hoursInput = document.getElementById('hoursInput');
+      const minutesInput = document.getElementById('minutesInput');
+      const secondsInput = document.getElementById('secondsInput');
+      
+      // 设置Canvas尺寸以提高清晰度
+      function setupCanvas() {
+        const size = analogClock.parentElement.offsetWidth;
+        analogClock.width = size * 2; // 高DPI支持
+        analogClock.height = size * 2;
+        analogClock.style.width = size + 'px';
+        analogClock.style.height = size + 'px';
+        ctx.scale(2, 2); // 缩放上下文
+        drawClock();
+      }
+      
+      // 绘制时钟
+      function drawClock() {
+        const now = new Date();
+        const hours = now.getHours() % 12;
+        const minutes = now.getMinutes();
+        const seconds = now.getSeconds();
+        const milliseconds = now.getMilliseconds();
+        
+        // 清空画布
+        ctx.clearRect(0, 0, analogClock.width / 2, analogClock.height / 2);
+        
+        const centerX = analogClock.width / 4;
+        const centerY = analogClock.height / 4;
+        const radius = Math.min(centerX, centerY) - 20;
+        
+        // 绘制时钟背景
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+        
+        // 绘制时钟边框
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+        ctx.strokeStyle = '#3b82f6';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        
+        // 绘制内边框
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius - 5, 0, 2 * Math.PI);
+        ctx.strokeStyle = '#e0e7ff';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        
+        // 绘制刻度
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = 2;
+        
+        for (let i = 0; i < 12; i++) {
+          const angle = (i / 12) * 2 * Math.PI - Math.PI / 2;
+          const x1 = centerX + Math.cos(angle) * (radius - 20);
+          const y1 = centerY + Math.sin(angle) * (radius - 20);
+          const x2 = centerX + Math.cos(angle) * (radius - 10);
+          const y2 = centerY + Math.sin(angle) * (radius - 10);
+          
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+        }
+        
+        // 绘制分钟刻度
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 1;
+        
+        for (let i = 0; i < 60; i++) {
+          if (i % 5 !== 0) { // 跳过小时刻度的位置
+            const angle = (i / 60) * 2 * Math.PI - Math.PI / 2;
+            const x1 = centerX + Math.cos(angle) * (radius - 15);
+            const y1 = centerY + Math.sin(angle) * (radius - 15);
+            const x2 = centerX + Math.cos(angle) * (radius - 10);
+            const y2 = centerY + Math.sin(angle) * (radius - 10);
+            
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+          }
+        }
+        
+        // 绘制时针
+        const hourAngle = ((hours + minutes / 60) / 12) * 2 * Math.PI - Math.PI / 2;
+        const hourLength = radius * 0.5;
+        
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.lineTo(centerX + Math.cos(hourAngle) * hourLength, centerY + Math.sin(hourAngle) * hourLength);
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = 6;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+        
+        // 绘制分针
+        const minuteAngle = ((minutes + seconds / 60) / 60) * 2 * Math.PI - Math.PI / 2;
+        const minuteLength = radius * 0.7;
+        
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.lineTo(centerX + Math.cos(minuteAngle) * minuteLength, centerY + Math.sin(minuteAngle) * minuteLength);
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 4;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+        
+        // 绘制秒针
+        const secondAngle = ((seconds + milliseconds / 1000) / 60) * 2 * Math.PI - Math.PI / 2;
+        const secondLength = radius * 0.85;
+        
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.lineTo(centerX + Math.cos(secondAngle) * secondLength, centerY + Math.sin(secondAngle) * secondLength);
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+        
+        // 绘制中心点
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 8, 0, 2 * Math.PI);
+        ctx.fillStyle = '#3b82f6';
+        ctx.fill();
+        
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 4, 0, 2 * Math.PI);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+      }
+      
+      // 更新数字时钟
+      function updateDigitalClock() {
+        const now = new Date();
+        const hours = now.getHours().toString().padStart(2, '0');
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        const seconds = now.getSeconds().toString().padStart(2, '0');
+        
+        digitalClock.textContent = `${hours}:${minutes}:${seconds}`;
+        
+        // 更新日期显示
+        const year = now.getFullYear();
+        const month = (now.getMonth() + 1).toString().padStart(2, '0');
+        const date = now.getDate().toString().padStart(2, '0');
+        dateDisplay.textContent = `${year}-${month}-${date}`;
+        
+        // 更新星期显示
+        const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+        weekdayDisplay.textContent = weekdays[now.getDay()];
+        
+        // 更新模拟时钟下方的数字显示
+        analogTimeDisplay.textContent = `${hours}:${minutes}:${seconds}`;
+      }
+      
+      // 更新世界时钟
+      function updateWorldClocks() {
+        worldClockItems.forEach(item => {
+          const timezone = item.dataset.timezone;
+          const options = { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: timezone };
+          const time = new Date().toLocaleTimeString('zh-CN', options);
+          item.textContent = time;
+        });
+      }
+      
+      // 计时器功能
+      let timerInterval = null;
+      let timerRunning = false;
+      let timerElapsed = 0;
+      let timerStartTime = 0;
+      
+      function formatTimer(ms) {
+        const totalSeconds = Math.floor(ms / 1000);
+        const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+        const seconds = (totalSeconds % 60).toString().padStart(2, '0');
+        const centiseconds = Math.floor((ms % 1000) / 10).toString().padStart(2, '0');
+        return `${minutes}:${seconds}.${centiseconds}`;
+      }
+      
+      startTimerBtn.addEventListener('click', function() {
+        if (!timerRunning) {
+          timerStartTime = Date.now() - timerElapsed;
+          timerInterval = setInterval(function() {
+            timerElapsed = Date.now() - timerStartTime;
+            timerDisplay.textContent = formatTimer(timerElapsed);
+          }, 10);
+          timerRunning = true;
+          startTimerBtn.textContent = '继续';
+        }
+      });
+      
+      pauseTimerBtn.addEventListener('click', function() {
+        if (timerRunning) {
+          clearInterval(timerInterval);
+          timerRunning = false;
+          startTimerBtn.textContent = '继续';
+        }
+      });
+      
+      resetTimerBtn.addEventListener('click', function() {
+        clearInterval(timerInterval);
+        timerRunning = false;
+        timerElapsed = 0;
+        timerDisplay.textContent = formatTimer(timerElapsed);
+        startTimerBtn.textContent = '开始';
+      });
+      
+      // 倒计时功能
+      let countdownInterval = null;
+      let countdownRunning = false;
+      let countdownTarget = 0;
+      
+      function formatCountdown(ms) {
+        const totalSeconds = Math.floor(ms / 1000);
+        const hours = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
+        const minutes = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0');
+        const seconds = (totalSeconds % 60).toString().padStart(2, '0');
+        return `${hours}:${minutes}:${seconds}`;
+      }
+      
+      startCountdownBtn.addEventListener('click', function() {
+        if (!countdownRunning) {
+          const hours = parseInt(hoursInput.value) || 0;
+          const minutes = parseInt(minutesInput.value) || 0;
+          const seconds = parseInt(secondsInput.value) || 0;
+          
+          const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+          
+          if (totalSeconds > 0) {
+            countdownTarget = Date.now() + totalSeconds * 1000;
+            countdownRunning = true;
+            
+            countdownInterval = setInterval(function() {
+              const remaining = countdownTarget - Date.now();
+              
+              if (remaining <= 0) {
+                clearInterval(countdownInterval);
+                countdownRunning = false;
+                countdownDisplay.textContent = '00:00:00';
+                // 这里可以添加提醒音效
+              } else {
+                countdownDisplay.textContent = formatCountdown(remaining);
+              }
+            }, 100);
+          }
+        }
+      });
+      
+      // 初始化
+      setupCanvas();
+      updateDigitalClock();
+      updateWorldClocks();
+      
+      // 定时更新
+      setInterval(function() {
+        drawClock();
+        updateDigitalClock();
+        updateWorldClocks();
+      }, 1000);
+      
+      // 窗口大小改变时重新设置Canvas
+      window.addEventListener('resize', setupCanvas);
+    });
+  </script>
+</body>
+</html>

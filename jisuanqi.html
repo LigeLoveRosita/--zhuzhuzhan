@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高级计算器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4F46E5', // 主色调：靛蓝色
+                        secondary: '#10B981', // 辅助色：绿色
+                        accent: '#F59E0B', // 强调色：琥珀色
+                        dark: '#1F2937', // 深色
+                        light: '#F3F4F6', // 浅色
+                        'calc-bg': '#1E293B', // 计算器背景
+                        'button-bg': '#334155', // 按钮背景
+                        'button-hover': '#475569', // 按钮悬停
+                        'button-active': '#64748B', // 按钮激活
+                    },
+                    fontFamily: {
+                        calculator: ['Inter', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'calc': '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+                        'button': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                    },
+                },
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .calc-gradient {
+                background: linear-gradient(145deg, #1E293B, #0F172A);
+            }
+            .button-gradient {
+                background: linear-gradient(145deg, #334155, #475569);
+            }
+            .display-shadow {
+                box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+            }
+            .calc-transition {
+                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .button-active-scale {
+                transform: scale(0.97);
+            }
+            .digit-animation {
+                animation: pulse 0.2s ease-in-out;
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4 font-calculator">
+    <!-- 计算器容器 -->
+    <div class="calculator w-full max-w-md calc-gradient rounded-xl shadow-calc overflow-hidden">
+        <!-- 计算历史记录区域 -->
+        <div class="history-container bg-dark/50 p-4 max-h-40 overflow-y-auto scrollbar-thin scrollbar-thumb-dark/50 scrollbar-track-transparent">
+            <div id="history" class="text-right text-gray-400 text-sm space-y-1 transition-all duration-300"></div>
+        </div>
+        
+        <!-- 显示区域 -->
+        <div class="display-container bg-dark p-6">
+            <div id="expression" class="text-right text-gray-400 mb-2 h-8 text-lg overflow-hidden whitespace-nowrap text-ellipsis"></div>
+            <div id="display" class="text-right text-white text-4xl font-bold h-16 flex items-end justify-end display-shadow p-2 rounded-lg bg-dark/30">0</div>
+        </div>
+        
+        <!-- 按钮区域 -->
+        <div class="buttons-grid grid grid-cols-5 gap-2 p-4">
+            <!-- 第一行 -->
+            <button class="calc-button button-gradient text-white p-4 rounded-lg shadow-button calc-transition flex items-center justify-center text-lg font-semibold" data-value="clear">
+                <i class="fa fa-refresh mr-1"></i> C
+            </button>
+            <button class="calc-button button-gradient text-white p-4 rounded-lg shadow-button calc-transition flex items-center justify-center text-lg font-semibold" data-value="backspace">
+                <i class="fa fa-backspace"></i>
+            </button>
+            <button class="calc-button button-gradient text-white p-4 rounded-lg shadow-button calc-transition flex items-center justify-center text-lg font-semibold" data-value="percent">
+                %
+            </button>
+            <button class="calc-button bg-primary text-white p-4 rounded-lg shadow-button calc-transition flex items-center justify-center text-lg font-semibold" data-value="divide">
+                ÷
+            </button>
+            <button class="calc-button button-gradient text-white p-4 rounded-lg shadow-button calc-transition flex items-center justify-center text-lg font-semibold" data-value="sqrt">
+                <i class="fa fa-square-root-o"></i>
+            </button>
+            
+            <!-- 第二行 -->
+            <button class="calc-button button-gradient text-white p-4 rounded-lg shadow-button calc-transition flex items-center justify-center text-lg font-semibold" data-value="7">7</button>
+            <button class="calc-button button-gradient text-white p-4 rounded-lg shadow-button calc-transition flex items-center justify-center text-lg font-semibold" data-value="8">8</button>
+            <button class="calc-button button-gradient text-white p-4 rounded-lg shadow-button calc-transition flex items-center justify-center text-lg font-semibold" data-value="9">9</button>
+            <button class="calc-button bg-primary text-white p-4 rounded-lg shadow-button calc-transition flex items-center justify-center text-lg font-semibold" data-value="multiply">
+                ×
+            </button>
+            <button class="calc-button button-gradient text-white p-4 rounded-lg shadow-button calc-transition flex items-center justify-center text-lg font-semibold" data-value="square">
+                <i class="fa fa-square"></i><sup>2</sup>
+            </button>
+            
+            <!-- 第三行 -->
+            <button class="calc-button button-gradient text-white p-4 rounded-lg shadow-button calc-transition flex items-center justify-center text-lg font-semibold" data-value="4">4</button>
+            <button class="calc-button button-gradient text-white p-4 rounded-lg shadow-button calc-transition flex items-center justify-center text-lg font-semibold" data-value="5">5</button>
+            <button class="calc-button button-gradient text-white p-4 rounded-lg shadow-button calc-transition flex items-center justify-center text-lg font-semibold" data-value="6">6</button>
+            <button class="calc-button bg-primary text-white p-4 rounded-lg shadow-button calc-transition flex items-center justify-center text-lg font-semibold" data-value="subtract">
+                −
+            </button>
+            <button class="calc-button button-gradient text-white p-4 rounded-lg shadow-button calc-transition flex items-center justify-center text-lg font-semibold" data-value="reciprocal">
+                1/x
+            </button>
+            
+            <!-- 第四行 -->
+            <button class="calc-button button-gradient text-white p-4 rounded-lg shadow-button calc-transition flex items-center justify-center text-lg font-semibold" data-value="1">1</button>
+            <button class="calc-button button-gradient text-white p-4 rounded-lg shadow-button calc-transition flex items-center justify-center text-lg font-semibold" data-value="2">2</button>
+            <button class="calc-button button-gradient text-white p-4 rounded-lg shadow-button calc-transition flex items-center justify-center text-lg font-semibold" data-value="3">3</button>
+            <button class="calc-button bg-primary text-white p-4 rounded-lg shadow-button calc-transition flex items-center justify-center text-lg font-semibold" data-value="add">
+                +
+            </button>
+            <button class="calc-button button-gradient text-white p-4 rounded-lg shadow-button calc-transition flex items-center justify-center text-lg font-semibold" data-value="pi">
+                π
+            </button>
+            
+            <!-- 第五行 -->
+            <button class="calc-button button-gradient text-white p-4 rounded-lg shadow-button calc-transition flex items-center justify-center text-lg font-semibold" data-value="sign">
+                ±
+            </button>
+            <button class="calc-button button-gradient text-white p-4 rounded-lg shadow-button calc-transition flex items-center justify-center text-lg font-semibold" data-value="0">0</button>
+            <button class="calc-button button-gradient text-white p-4 rounded-lg shadow-button calc-transition flex items-center justify-center text-lg font-semibold" data-value=".">
+                .
+            </button>
+            <button class="calc-button bg-accent text-white p-4 rounded-lg shadow-button calc-transition flex items-center justify-center text-lg font-semibold col-span-2" data-value="equals">
+                =
+            </button>
+        </div>
+        
+        <!-- 主题切换按钮 -->
+        <div class="theme-toggle p-4 flex justify-center">
+            <button id="themeToggle" class="bg-dark/50 text-white p-2 rounded-full shadow-button calc-transition flex items-center justify-center">
+                <i class="fa fa-moon-o" id="themeIcon"></i>
+            </button>
+        </div>
+        
+        <!-- 键盘快捷键提示 -->
+        <div class="keyboard-hints text-center text-gray-400 text-xs p-2 bg-dark/30">
+            <p>键盘快捷键：0-9, +, -, *, /, =, Enter, Backspace, C, Esc</p>
+        </div>
+    </div>
+
+    <script>
+        // 计算器核心逻辑
+        document.addEventListener('DOMContentLoaded', () => {
+            // 获取DOM元素
+            const display = document.getElementById('display');
+            const expression = document.getElementById('expression');
+            const history = document.getElementById('history');
+            const buttons = document.querySelectorAll('.calc-button');
+            const themeToggle = document.getElementById('themeToggle');
+            const themeIcon = document.getElementById('themeIcon');
+            
+            // 计算器状态变量
+            let currentValue = '0';
+            let previousValue = null;
+            let operator = null;
+            let shouldResetScreen = false;
+            let calculationHistory = [];
+            let isDarkMode = true;
+            
+            // 更新显示
+            function updateDisplay() {
+                display.textContent = currentValue;
+                // 添加数字动画效果
+                display.classList.add('digit-animation');
+                setTimeout(() => {
+                    display.classList.remove('digit-animation');
+                }, 200);
+            }
+            
+            // 更新表达式
+            function updateExpression() {
+                if (previousValue !== null && operator !== null) {
+                    expression.textContent = `${previousValue} ${getOperatorSymbol(operator)}`;
+                } else {
+                    expression.textContent = '';
+                }
+            }
+            
+            // 获取操作符符号
+            function getOperatorSymbol(op) {
+                const symbols = {
+                    add: '+',
+                    subtract: '−',
+                    multiply: '×',
+                    divide: '÷'
+                };
+                return symbols[op] || op;
+            }
+            
+            // 添加历史记录
+            function addToHistory(calculation) {
+                calculationHistory.push(calculation);
+                // 限制历史记录数量为10条
+                if (calculationHistory.length > 10) {
+                    calculationHistory.shift();
+                }
+                renderHistory();
+            }
+            
+            // 渲染历史记录
+            function renderHistory() {
+                history.innerHTML = calculationHistory.map(item => `
+                    <div class="history-item transition-opacity hover:opacity-80">
+                        <div class="history-expression text-gray-400">${item.expression}</div>
+                        <div class="history-result text-gray-300">${item.result}</div>
+                    </div>
+                `).join('');
+            }
+            
+            // 切换主题
+            function toggleTheme() {
+                isDarkMode = !isDarkMode;
+                const calculator = document.querySelector('.calculator');
+                const historyContainer = document.querySelector('.history-container');
+                const displayContainer = document.querySelector('.display-container');
+                const buttonsGrid = document.querySelector('.buttons-grid');
+                const themeToggle = document.querySelector('.theme-toggle');
+                const keyboardHints = document.querySelector('.keyboard-hints');
+                
+                if (isDarkMode) {
+                    // 切换到深色主题
+                    document.body.classList.remove('bg-gray-900');
+                    document.body.classList.add('bg-gray-100');
+                    calculator.classList.remove('bg-white');
+                    calculator.classList.add('calc-gradient');
+                    historyContainer.classList.remove('bg-gray-100');
+                    historyContainer.classList.add('bg-dark/50');
+                    displayContainer.classList.remove('bg-gray-50');
+                    displayContainer.classList.add('bg-dark');
+                    buttons.forEach(button => {
+                        if (!button.classList.contains('bg-primary') && !button.classList.contains('bg-accent')) {
+                            button.classList.remove('bg-gray-200', 'text-gray-800');
+                            button.classList.add('button-gradient', 'text-white');
+                        }
+                    });
+                    themeIcon.classList.remove('fa-sun-o');
+                    themeIcon.classList.add('fa-moon-o');
+                } else {
+                    // 切换到浅色主题
+                    document.body.classList.remove('bg-gray-100');
+                    document.body.classList.add('bg-gray-900');
+                    calculator.classList.remove('calc-gradient');
+                    calculator.classList.add('bg-white');
+                    historyContainer.classList.remove('bg-dark/50');
+                    historyContainer.classList.add('bg-gray-100');
+                    displayContainer.classList.remove('bg-dark');
+                    displayContainer.classList.add('bg-gray-50');
+                    buttons.forEach(button => {
+                        if (!button.classList.contains('bg-primary') && !button.classList.contains('bg-accent')) {
+                            button.classList.remove('button-gradient', 'text-white');
+                            button.classList.add('bg-gray-200', 'text-gray-800');
+                        }
+                    });
+                    themeIcon.classList.remove('fa-moon-o');
+                    themeIcon.classList.add('fa-sun-o');
+                }
+            }
+            
+            // 数字按钮处理
+            function handleNumber(num) {
+                if (currentValue === '0' || shouldResetScreen) {
+                    currentValue = num;
+                    shouldResetScreen = false;
+                } else {
+                    // 限制输入长度
+                    if (currentValue.length < 12) {
+                        currentValue += num;
+                    }
+                }
+                updateDisplay();
+            }
+            
+            // 小数点处理
+            function handleDecimal() {
+                if (shouldResetScreen) {
+                    currentValue = '0.';
+                    shouldResetScreen = false;
+                } else if (!currentValue.includes('.')) {
+                    currentValue += '.';
+                }
+                updateDisplay();
+            }
+            
+            // 操作符处理
+            function handleOperator(nextOperator) {
+                const inputValue = parseFloat(currentValue);
+                
+                if (previousValue !== null && operator && !shouldResetScreen) {
+                    // 执行上一次运算
+                    const result = calculate();
+                    currentValue = String(result);
+                    addToHistory({
+                        expression: `${previousValue} ${getOperatorSymbol(operator)} ${inputValue}`,
+                        result: currentValue
+                    });
+                    previousValue = null;
+                } else {
+                    previousValue = inputValue;
+                }
+                
+                shouldResetScreen = true;
+                operator = nextOperator;
+                updateExpression();
+            }
+            
+            // 计算结果
+            function calculate() {
+                let result;
+                const prev = parseFloat(previousValue);
+                const current = parseFloat(currentValue);
+                
+                if (isNaN(prev) || isNaN(current)) return currentValue;
+                
+                switch (operator) {
+                    case 'add':
+                        result = prev + current;
+                        break;
+                    case 'subtract':
+                        result = prev - current;
+                        break;
+                    case 'multiply':
+                        result = prev * current;
+                        break;
+                    case 'divide':
+                        // 防止除以零
+                        if (current === 0) {
+                            alert('除数不能为零');
+                            return currentValue;
+                        }
+                        result = prev / current;
+                        break;
+                    default:
+                        return currentValue;
+                }
+                
+                // 处理大数和小数
+                if (Math.abs(result) > 1e12) {
+                    result = result.toExponential(6);
+                } else if (Math.abs(result) < 1e-10 && result !== 0) {
+                    result = result.toExponential(6);
+                } else {
+                    // 移除末尾的零
+                    result = Number(result.toFixed(10));
+                }
+                
+                return result;
+            }
+            
+            // 处理等号
+            function handleEquals() {
+                if (operator === null) return;
+                
+                const result = calculate();
+                const calcExpression = `${previousValue} ${getOperatorSymbol(operator)} ${currentValue}`;
+                
+                currentValue = String(result);
+                operator = null;
+                previousValue = null;
+                shouldResetScreen = true;
+                
+                updateDisplay();
+                updateExpression();
+                
+                // 添加到历史记录
+                addToHistory({
+                    expression: calcExpression,
+                    result: currentValue
+                });
+            }
+            
+            // 清除功能
+            function handleClear() {
+                currentValue = '0';
+                previousValue = null;
+                operator = null;
+                shouldResetScreen = false;
+                updateDisplay();
+                updateExpression();
+            }
+            
+            // 退格功能
+            function handleBackspace() {
+                if (shouldResetScreen) {
+                    currentValue = '0';
+                    shouldResetScreen = false;
+                } else if (currentValue.length > 1) {
+                    currentValue = currentValue.slice(0, -1);
+                } else {
+                    currentValue = '0';
+                }
+                updateDisplay();
+            }
+            
+            // 百分比功能
+            function handlePercent() {
+                currentValue = String(parseFloat(currentValue) / 100);
+                updateDisplay();
+            }
+            
+            // 正负号切换
+            function handleSign() {
+                currentValue = String(parseFloat(currentValue) * -1);
+                updateDisplay();
+            }
+            
+            // 平方功能
+            function handleSquare() {
+                const value = parseFloat(currentValue);
+                currentValue = String(value * value);
+                shouldResetScreen = true;
+                updateDisplay();
+                
+                // 添加到历史记录
+                addToHistory({
+                    expression: `${value}²`,
+                    result: currentValue
+                });
+            }
+            
+            // 平方根功能
+            function handleSquareRoot() {
+                const value = parseFloat(currentValue);
+                if (value < 0) {
+                    alert('不能对负数求平方根');
+                    return;
+                }
+                currentValue = String(Math.sqrt(value));
+                shouldResetScreen = true;
+                updateDisplay();
+                
+                // 添加到历史记录
+                addToHistory({
+                    expression: `√${value}`,
+                    result: currentValue
+                });
+            }
+            
+            // 倒数功能
+            function handleReciprocal() {
+                const value = parseFloat(currentValue);
+                if (value === 0) {
+                    alert('不能取零的倒数');
+                    return;
+                }
+                currentValue = String(1 / value);
+                shouldResetScreen = true;
+                updateDisplay();
+                
+                // 添加到历史记录
+                addToHistory({
+                    expression: `1/${value}`,
+                    result: currentValue
+                });
+            }
+            
+            // π值功能
+            function handlePi() {
+                currentValue = String(Math.PI.toFixed(10));
+                shouldResetScreen = true;
+                updateDisplay();
+            }
+            
+            // 按钮点击事件处理
+            buttons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // 添加按钮按下效果
+                    button.classList.add('button-active-scale');
+                    setTimeout(() => {
+                        button.classList.remove('button-active-scale');
+                    }, 150);
+                    
+                    const value = button.dataset.value;
+                    
+                    if (/\d/.test(value)) {
+                        handleNumber(value);
+                    } else if (value === '.') {
+                        handleDecimal();
+                    } else if (['add', 'subtract', 'multiply', 'divide'].includes(value)) {
+                        handleOperator(value);
+                    } else if (value === 'equals') {
+                        handleEquals();
+                    } else if (value === 'clear') {
+                        handleClear();
+                    } else if (value === 'backspace') {
+                        handleBackspace();
+                    } else if (value === 'percent') {
+                        handlePercent();
+                    } else if (value === 'sign') {
+                        handleSign();
+                    } else if (value === 'square') {
+                        handleSquare();
+                    } else if (value === 'sqrt') {
+                        handleSquareRoot();
+                    } else if (value === 'reciprocal') {
+                        handleReciprocal();
+                    } else if (value === 'pi') {
+                        handlePi();
+                    }
+                });
+            });
+            
+            // 主题切换事件
+            themeToggle.addEventListener('click', toggleTheme);
+            
+            // 键盘事件处理
+            document.addEventListener('keydown', (e) => {
+                e.preventDefault();
+                
+                if (e.key >= '0' && e.key <= '9') {
+                    handleNumber(e.key);
+                } else if (e.key === '.') {
+                    handleDecimal();
+                } else if (e.key === '+') {
+                    handleOperator('add');
+                } else if (e.key === '-') {
+                    handleOperator('subtract');
+                } else if (e.key === '*' || e.key === '×') {
+                    handleOperator('multiply');
+                } else if (e.key === '/' || e.key === '÷') {
+                    handleOperator('divide');
+                } else if (e.key === '=' || e.key === 'Enter') {
+                    handleEquals();
+                } else if (e.key === 'Escape' || e.key === 'c' || e.key === 'C') {
+                    handleClear();
+                } else if (e.key === 'Backspace') {
+                    handleBackspace();
+                } else if (e.key === '%') {
+                    handlePercent();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
