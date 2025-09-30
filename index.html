@@ -128,37 +128,67 @@
             <div class="text-center">
                 <h3 class="text-lg font-bold mb-6">快速工具</h3>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <button class="flex flex-col items-center justify-center p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                    <a href="rili.html" class="flex flex-col items-center justify-center p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 hover:text-primary">
                         <i class="fa fa-calendar text-xl text-primary mb-2"></i>
                         <span class="text-sm">日历</span>
-                    </button>
-                    <button class="flex flex-col items-center justify-center p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                    </a>
+                    <a href="shizhong.html" class="flex flex-col items-center justify-center p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 hover:text-primary">
                         <i class="fa fa-clock-o text-xl text-primary mb-2"></i>
                         <span class="text-sm">时钟</span>
-                    </button>
-                    <button class="flex flex-col items-center justify-center p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                    </a>
+                    <a href="jisuanqi.html" class="flex flex-col items-center justify-center p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 hover:text-primary">
                         <i class="fa fa-calculator text-xl text-primary mb-2"></i>
                         <span class="text-sm">计算器</span>
-                    </button>
-                    <button class="flex flex-col items-center justify-center p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                    </a>
+                    <a href="suiji.html" class="flex flex-col items-center justify-center p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 hover:text-primary">
                         <i class="fa fa-random text-xl text-primary mb-2"></i>
                         <span class="text-sm">随机</span>
-                    </button>
+                    </a>
                 </div>
             </div>
         </main>
+
+        <!-- B站视频播放器 -->
+        <div class="max-w-2xl mx-auto my-16">
+            <div class="relative rounded-xl overflow-hidden shadow-xl">
+                <!-- B站视频iframe -->
+                <iframe 
+                    id="bilibili-player"
+                    src="https://player.bilibili.com/player.html?bvid=BV1CTCpYUEnT&t=30.897285&high_quality=1&muted=0"
+                    scrolling="no"
+                    border="0"
+                    frameborder="no"
+                    framespacing="0"
+                    allowfullscreen="true"
+                    allow="autoplay; fullscreen; encrypted-media"
+                    class="w-full aspect-video"
+                ></iframe>
+                
+                <!-- 声音提示层 -->
+                <div 
+                    id="sound-prompt"
+                    class="absolute inset-0 flex flex-col items-center justify-center bg-black/30 backdrop-blur-sm cursor-pointer"
+                    style="display: flex;"
+                >
+                    <div class="bg-white/20 backdrop-blur-xl p-6 rounded-full">
+                        <i class="fa fa-volume-up text-white text-3xl"></i>
+                    </div>
+                    <p class="text-white text-lg mt-4">点击开启声音</p>
+                </div>
+            </div>
+        </div>
 
         <!-- 页脚 -->
         <footer class="text-center mt-24 text-gray-500 text-sm">
             <p>&copy; 2024 Kizuki 导航站</p>
             <div class="mt-4 flex justify-center gap-4">
-                <a href="#" class="hover:text-primary transition-colors duration-300">
+                <a href="https://github.com/LigeLoveRosita" target="_blank" rel="noopener noreferrer" class="hover:text-primary transition-colors duration-300">
                     <i class="fa fa-github text-lg"></i>
                 </a>
-                <a href="#" class="hover:text-primary transition-colors duration-300">
+                <a href="https://x.com/Ligelove_Rosita" target="_blank" rel="noopener noreferrer" class="hover:text-primary transition-colors duration-300">
                     <i class="fa fa-twitter text-lg"></i>
                 </a>
-                <a href="#" class="hover:text-primary transition-colors duration-300">
+                <a href="mailto:i@rosita0501.xyz" class="hover:text-primary transition-colors duration-300">
                     <i class="fa fa-envelope text-lg"></i>
                 </a>
             </div>
@@ -176,6 +206,150 @@
                     card.style.opacity = '1';
                 }, 100 * index);
             });
+        });
+    </script>
+    
+    <!-- B站视频自动播放控制 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const iframe = document.getElementById('bilibili-player');
+            const soundPrompt = document.getElementById('sound-prompt');
+            let hasInteracted = false;
+            const maxAttempts = 8;
+            let currentAttempt = 0;
+            
+            // 隐藏声音提示层
+            function hideSoundPrompt() {
+                if (soundPrompt) {
+                    soundPrompt.style.display = 'none';
+                }
+                hasInteracted = true;
+            }
+            
+            // 发送播放命令
+            function sendPlayCommand() {
+                try {
+                    if (iframe && iframe.contentWindow) {
+                        // 尝试多种命令格式以提高兼容性
+                        // 格式1：对象格式
+                        iframe.contentWindow.postMessage(JSON.stringify({cmd: 'play'}), '*');
+                        
+                        // 格式2：B站特定控制命令
+                        iframe.contentWindow.postMessage({ 'biliplay': true }, '*');
+                        
+                        // 格式3：带来源的命令字符串
+                        iframe.contentWindow.postMessage(JSON.stringify({cmd: 'play', from: 'instantpage'}), '*');
+                    }
+                } catch (error) {
+                    console.error('发送播放命令失败:', error);
+                }
+            }
+            
+            // 发送取消静音命令
+            function sendUnmuteCommand() {
+                try {
+                    if (iframe && iframe.contentWindow) {
+                        // 尝试多种命令格式
+                        iframe.contentWindow.postMessage(JSON.stringify({cmd: 'unmute'}), '*');
+                        iframe.contentWindow.postMessage({ 'biliunmute': true }, '*');
+                        iframe.contentWindow.postMessage(JSON.stringify({cmd: 'unmute', from: 'instantpage'}), '*');
+                    }
+                } catch (error) {
+                    console.error('发送取消静音命令失败:', error);
+                }
+            }
+            
+            // 尝试自动播放和取消静音
+            function tryAutoplay() {
+                currentAttempt++;
+                
+                if (currentAttempt <= maxAttempts) {
+                    sendPlayCommand();
+                    sendUnmuteCommand();
+                    
+                    // 直接尝试操作iframe中的video元素
+                    try {
+                        if (iframe && iframe.contentDocument) {
+                            const videos = iframe.contentDocument.getElementsByTagName('video');
+                            if (videos.length > 0) {
+                                videos[0].play().catch(e => console.log('直接播放尝试失败:', e));
+                                videos[0].muted = false;
+                            }
+                        }
+                    } catch (error) {
+                        console.error('直接操作video元素失败:', error);
+                    }
+                    
+                    // 递增间隔重试
+                    const delay = 300 * currentAttempt;
+                    setTimeout(tryAutoplay, delay);
+                } else if (!hasInteracted) {
+                    // 尝试所有方法后仍未成功且用户未交互，显示提示层
+                    if (soundPrompt) {
+                        soundPrompt.style.display = 'flex';
+                    }
+                }
+            }
+            
+            // 处理用户交互
+            function handleInteraction() {
+                if (!hasInteracted) {
+                    hideSoundPrompt();
+                    sendPlayCommand();
+                    sendUnmuteCommand();
+                    
+                    // 尝试直接操作video元素
+                    try {
+                        if (iframe && iframe.contentDocument) {
+                            const videos = iframe.contentDocument.getElementsByTagName('video');
+                            if (videos.length > 0) {
+                                videos[0].play().catch(e => console.log('交互后播放尝试失败:', e));
+                                videos[0].muted = false;
+                            }
+                        }
+                    } catch (error) {
+                        console.error('交互后直接操作video元素失败:', error);
+                    }
+                }
+            }
+            
+            // 声音提示层点击事件
+            if (soundPrompt) {
+                soundPrompt.addEventListener('click', handleInteraction);
+            }
+            
+            // 全局点击事件监听
+            document.addEventListener('click', function handleClick() {
+                handleInteraction();
+            }, { once: true });
+            
+            // 全局键盘事件监听
+            document.addEventListener('keydown', function handleKeydown() {
+                handleInteraction();
+            }, { once: true });
+            
+            // 滚动事件监听
+            window.addEventListener('scroll', function handleScroll() {
+                handleInteraction();
+            }, { once: true });
+            
+            // 启动自动播放尝试
+            setTimeout(() => {
+                tryAutoplay();
+            }, 1000);
+            
+            // 2秒后检查iframe内容
+            setTimeout(() => {
+                try {
+                    if (iframe && iframe.contentDocument && iframe.contentDocument.body) {
+                        // 尝试触发自动播放
+                        sendPlayCommand();
+                        sendUnmuteCommand();
+                    }
+                } catch (error) {
+                    console.error('检查iframe内容失败:', error);
+                }
+            }, 2000);
         });
     </script>
 </body>
